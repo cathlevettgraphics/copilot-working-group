@@ -1,7 +1,7 @@
 import { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { RouterProvider, createMemoryHistory, createRootRoute, createRoute, createRouter } from '@tanstack/react-router';
+import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router';
 import { CartProvider } from '../contexts/CartContext';
 
 // Create a test QueryClient with no retries
@@ -17,56 +17,44 @@ const createTestQueryClient = () =>
 interface TestWrapperOptions {
   queryClient?: QueryClient;
   route?: string;
-  productId?: string;
 }
 
-// Create a wrapper that includes all necessary providers
-export const createTestWrapper = ({ queryClient, route = '/', productId = '1' }: TestWrapperOptions = {}) => {
+// Custom render function that wraps component with all necessary providers
+export function renderWithProviders(
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'> & TestWrapperOptions
+) {
+  const { queryClient, route = '/products/1', ...renderOptions } = options || {};
   const client = queryClient || createTestQueryClient();
 
-  // Create routes for testing
+  // Create routes for testing with actual component
   const rootRoute = createRootRoute();
-  const indexRoute = createRoute({
-    getParentRoute: () => rootRoute,
-    path: '/',
-    component: () => null,
-  });
+  
   const productRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/products/$productId',
-    component: () => null,
+    component: () => ui,
   });
 
-  const routeTree = rootRoute.addChildren([indexRoute, productRoute]);
+  const routeTree = rootRoute.addChildren([productRoute]);
+  
   const router = createRouter({
     routeTree,
     history: createMemoryHistory({
       initialEntries: [route],
     }),
-    context: undefined,
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>
       <CartProvider>
-        <RouterProvider router={router as any}>
-          {children}
-        </RouterProvider>
+        <RouterProvider router={router} />
       </CartProvider>
     </QueryClientProvider>
   );
-};
-
-// Custom render function
-export function renderWithProviders(
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'> & TestWrapperOptions
-) {
-  const { queryClient, route, productId, ...renderOptions } = options || {};
-  const Wrapper = createTestWrapper({ queryClient, route, productId });
 
   return {
-    ...render(ui, { wrapper: Wrapper, ...renderOptions }),
+    ...render(<div />, { wrapper: Wrapper, ...renderOptions }),
   };
 }
 

@@ -1,85 +1,96 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ProductDetail } from './index';
+import { renderWithProviders, createTestQueryClient } from '../../test/utils';
+import { QueryClient } from '@tanstack/react-query';
+import type { Product } from '../../types/product';
 
-// Mock the child components to isolate ProductDetail behavior
-vi.mock('../ProductNavigation', () => ({
-  ProductNavigation: () => <div data-testid="product-navigation">Navigation</div>,
-}));
-
-vi.mock('../ProductImage', () => ({
-  ProductImage: () => <div data-testid="product-image">Image</div>,
-}));
-
-vi.mock('../ProductInfo', () => ({
-  ProductInfo: () => <div data-testid="product-info">Info</div>,
-}));
-
-vi.mock('../ProductMeta', () => ({
-  ProductMeta: () => <div data-testid="product-meta">Meta</div>,
-}));
-
-vi.mock('../ProductActions', () => ({
-  ProductActions: () => <div data-testid="product-actions">Actions</div>,
-}));
+// Mock product data for testing
+const mockProduct: Product = {
+  id: 1,
+  title: 'Smartphone X Pro',
+  description: 'A powerful smartphone with amazing features',
+  category: 'smartphones',
+  price: 899.99,
+  rating: 4.5,
+  stock: 25,
+  brand: 'TechBrand',
+  availabilityStatus: 'In Stock',
+  returnPolicy: '30 day return policy',
+  thumbnail: 'https://example.com/thumb.jpg',
+  images: ['https://example.com/image1.jpg', 'https://example.com/image2.jpg'],
+};
 
 describe('ProductDetail Component', () => {
-  it('renders all child components in the correct structure', () => {
-    render(<ProductDetail />);
+  let queryClient: QueryClient;
 
-    // Test Behavior: Verify that all child components are rendered
-    // This tests the key user-facing behavior that all parts of the product detail are visible
-    expect(screen.getByTestId('product-navigation')).toBeInTheDocument();
-    expect(screen.getByTestId('product-image')).toBeInTheDocument();
-    expect(screen.getByTestId('product-info')).toBeInTheDocument();
-    expect(screen.getByTestId('product-meta')).toBeInTheDocument();
-    expect(screen.getByTestId('product-actions')).toBeInTheDocument();
+  beforeEach(() => {
+    queryClient = createTestQueryClient();
+    // Pre-populate the cache with mock product data
+    queryClient.setQueryData(['product', 1], mockProduct);
   });
 
-  it('renders with correct layout structure for proper visual organization', () => {
-    const { container } = render(<ProductDetail />);
+  it('renders product information correctly when data is loaded', async () => {
+    renderWithProviders(<ProductDetail />, {
+      queryClient,
+      route: '/products/1',
+    });
 
-    // Test Behavior: Verify the component has the correct layout structure
-    // This ensures the UI is organized correctly for users
-    const containerDiv = container.querySelector('[class*="container"]');
-    expect(containerDiv).toBeInTheDocument();
-    expect(containerDiv).not.toBeNull();
-
-    const productDiv = container.querySelector('[class*="product"]');
-    expect(productDiv).toBeInTheDocument();
-
-    const infoSection = container.querySelector('[class*="infoSection"]');
-    expect(infoSection).toBeInTheDocument();
-  });
-
-  it('displays product navigation as the first element for easy access', () => {
-    const { container } = render(<ProductDetail />);
-
-    // Test Behavior: Verify navigation is displayed first for user accessibility
-    // This ensures users can easily navigate back to the product list
-    const containerDiv = container.querySelector('[class*="container"]');
-    expect(containerDiv).not.toBeNull();
+    // Test Behavior: Verify that product information is displayed to the user
+    await waitFor(() => {
+      expect(screen.getByText('Smartphone X Pro')).toBeInTheDocument();
+    });
     
-    const firstChild = containerDiv?.firstElementChild;
-    expect(firstChild).toContainElement(screen.getByTestId('product-navigation'));
+    expect(screen.getByText('$899.99')).toBeInTheDocument();
+    expect(screen.getByText('A powerful smartphone with amazing features')).toBeInTheDocument();
   });
 
-  it('groups info, meta, and actions in the same section for cohesive display', () => {
-    const { container } = render(<ProductDetail />);
+  it('displays product metadata including brand, category, stock and rating', async () => {
+    renderWithProviders(<ProductDetail />, {
+      queryClient,
+      route: '/products/1',
+    });
 
-    // Test Behavior: Verify info section contains the expected child components
-    // This ensures product details are logically grouped for better user experience
-    const infoSection = container.querySelector('[class*="infoSection"]');
-    expect(infoSection).toBeInTheDocument();
-    expect(infoSection).not.toBeNull();
+    // Test Behavior: Verify that product metadata is visible to users
+    await waitFor(() => {
+      expect(screen.getByText('Brand')).toBeInTheDocument();
+    });
+    
+    expect(screen.getByText('TechBrand')).toBeInTheDocument();
+    expect(screen.getByText('Category')).toBeInTheDocument();
+    expect(screen.getByText('smartphones')).toBeInTheDocument();
+    expect(screen.getByText('Stock')).toBeInTheDocument();
+    expect(screen.getByText('25')).toBeInTheDocument();
+    expect(screen.getByText('Rating')).toBeInTheDocument();
+    expect(screen.getByText(/4\.5/)).toBeInTheDocument();
+  });
 
-    // All three components should be within the infoSection
-    const info = screen.getByTestId('product-info');
-    const meta = screen.getByTestId('product-meta');
-    const actions = screen.getByTestId('product-actions');
+  it('provides navigation back to products list', async () => {
+    renderWithProviders(<ProductDetail />, {
+      queryClient,
+      route: '/products/1',
+    });
 
-    expect(infoSection?.contains(info)).toBe(true);
-    expect(infoSection?.contains(meta)).toBe(true);
-    expect(infoSection?.contains(actions)).toBe(true);
+    // Test Behavior: Verify users can navigate back to the product list
+    const backLink = await screen.findByText('← Back to Products');
+    expect(backLink).toBeInTheDocument();
+    expect(backLink.tagName).toBe('A');
+  });
+
+  it('displays add to cart button for user interaction', async () => {
+    renderWithProviders(<ProductDetail />, {
+      queryClient,
+      route: '/products/1',
+    });
+
+    // Test Behavior: Verify that users can add product to cart
+    await waitFor(() => {
+      expect(screen.getByText('Smartphone X Pro')).toBeInTheDocument();
+    });
+    
+    const addToCartButton = screen.getByRole('button', { name: /add to cart/i });
+    expect(addToCartButton).toBeInTheDocument();
+    expect(addToCartButton).toBeEnabled();
   });
 });
