@@ -43,6 +43,7 @@ describe('ProductDetail Component', () => {
     // This ensures the UI is organized correctly for users
     const containerDiv = container.querySelector('[class*="container"]');
     expect(containerDiv).toBeInTheDocument();
+    expect(containerDiv).not.toBeNull();
 
     const productDiv = container.querySelector('[class*="product"]');
     expect(productDiv).toBeInTheDocument();
@@ -57,6 +58,8 @@ describe('ProductDetail Component', () => {
     // Test Behavior: Verify navigation is displayed first for user accessibility
     // This ensures users can easily navigate back to the product list
     const containerDiv = container.querySelector('[class*="container"]');
+    expect(containerDiv).not.toBeNull();
+    
     const firstChild = containerDiv?.firstElementChild;
     expect(firstChild).toContainElement(screen.getByTestId('product-navigation'));
   });
@@ -68,6 +71,7 @@ describe('ProductDetail Component', () => {
     // This ensures product details are logically grouped for better user experience
     const infoSection = container.querySelector('[class*="infoSection"]');
     expect(infoSection).toBeInTheDocument();
+    expect(infoSection).not.toBeNull();
 
     // All three components should be within the infoSection
     const info = screen.getByTestId('product-info');
