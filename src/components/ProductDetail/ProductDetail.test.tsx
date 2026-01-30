@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { ProductDetail } from './index';
 import { renderWithProviders, createTestQueryClient } from '../../test/utils';
 import { QueryClient } from '@tanstack/react-query';
@@ -84,7 +83,7 @@ describe('ProductDetail Component', () => {
       route: '/products/1',
     });
 
-    // Test Behavior: Verify that users can add product to cart
+    // Test Behavior: Verify that an enabled add-to-cart button is displayed
     await waitFor(() => {
       expect(screen.getByText('Smartphone X Pro')).toBeInTheDocument();
     });

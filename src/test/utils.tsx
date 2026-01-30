@@ -1,4 +1,4 @@
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createMemoryHistory, createRootRoute, createRoute, createRouter, RouterProvider } from '@tanstack/react-router';
@@ -19,7 +19,17 @@ interface TestWrapperOptions {
   route?: string;
 }
 
-// Custom render function that wraps component with all necessary providers
+/**
+ * Custom render function that wraps component with all necessary providers.
+ * 
+ * This function sets up the component for testing with:
+ * - QueryClient for React Query
+ * - RouterProvider for TanStack Router
+ * - CartProvider for cart context
+ * 
+ * Note: The component is rendered through the router's route configuration
+ * rather than as children, to properly simulate the routing behavior.
+ */
 export function renderWithProviders(
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'> & TestWrapperOptions
@@ -27,7 +37,7 @@ export function renderWithProviders(
   const { queryClient, route = '/products/1', ...renderOptions } = options || {};
   const client = queryClient || createTestQueryClient();
 
-  // Create routes for testing with actual component
+  // Create routes for testing - component is rendered via route configuration
   const rootRoute = createRootRoute();
   
   const productRoute = createRoute({
@@ -45,16 +55,16 @@ export function renderWithProviders(
     }),
   });
 
-  const Wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={client}>
-      <CartProvider>
-        <RouterProvider router={router} />
-      </CartProvider>
-    </QueryClientProvider>
-  );
-
+  // Render with all providers - RouterProvider handles component rendering
   return {
-    ...render(<div />, { wrapper: Wrapper, ...renderOptions }),
+    ...render(
+      <QueryClientProvider client={client}>
+        <CartProvider>
+          <RouterProvider router={router} />
+        </CartProvider>
+      </QueryClientProvider>,
+      renderOptions
+    ),
   };
 }
 
