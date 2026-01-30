@@ -6,9 +6,9 @@ This repository hosts hands-on workshops to learn and practice GitHub Copilot. T
 
 ## Technology Stack
 
-- **Framework**: React 19.2
+- **Framework**: React 19.x
 - **Build Tool**: Vite 7.x
-- **Language**: TypeScript 5.9
+- **Language**: TypeScript 5.x
 - **Testing**: Vitest 4.x with Testing Library
 - **Linting**: ESLint 9.x
 - **State Management**: TanStack React Query
@@ -86,6 +86,13 @@ Previews the production build locally. Must run `npm run build` first.
 .
 ├── .github/              # GitHub configuration and workflows
 ├── src/                  # Source code
+│   ├── components/       # React components (Header, Product cards, etc.)
+│   ├── contexts/         # React contexts
+│   ├── hooks/            # Custom React hooks
+│   ├── routes/           # Route components and pages
+│   ├── services/         # API services and utilities
+│   ├── test/             # Test utilities and setup
+│   └── types/            # TypeScript type definitions
 ├── assets/              # Static assets (images, etc.)
 ├── index.html           # Entry HTML file
 ├── package.json         # Dependencies and scripts
